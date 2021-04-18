@@ -4,35 +4,33 @@ use IEEE.numeric_std.all;
 
 entity pwm is
 	generic(
-			pwm_resolution: integer := 8  -- Resolucion máxima del pwm
+			pwm_resolution: integer := 8;  -- Resolucion máxima del pwm
+			freq_resolution: integer :=16
 	);
 	port(
 		clk_i: in std_logic;
 		rst_i: in std_logic;
 		duty_cycle_i: in unsigned(pwm_resolution-1 downto 0);
-		divider_cnt_i: in unsigned(15 downto 0);
+		freq_divider_i: in unsigned(freq_resolution-1 downto 0);
 		pwm_o: out std_logic
 	);
 end;
 
 architecture pwm_arq of pwm is
 
-	signal clk_cnt: unsigned(15 downto 0) := to_unsigned(250,16);
+	signal clk_cnt: unsigned(freq_resolution-1 downto 0) := (others => '0');
 	signal aux_clk_o: std_logic := '0';
-	signal aux_cnt_o: unsigned(pwm_resolution-1 downto 0) := to_unsigned(0,pwm_resolution);
+	signal aux_cnt_o: unsigned(pwm_resolution-1 downto 0) := (others => '0');
 	
 begin
 	
 	CLK_DIVIDER: process(clk_i,rst_i)
 	begin
-		if (rst_i = '1') then
-			clk_cnt <= to_unsigned(1,16);
-			aux_clk_o <= '0';
-		elsif rising_edge(clk_i) then
-			clk_cnt <= clk_cnt + to_unsigned(1,16);
-			if clk_cnt = divider_cnt_i then
+		if rising_edge(clk_i) then
+			clk_cnt <= clk_cnt + 1;
+			if clk_cnt = freq_divider_i then
 				aux_clk_o <= not aux_clk_o;
-				clk_cnt <= to_unsigned(0,16);
+				clk_cnt <= (others => '0');
 			end if;
 		end if;
 	end process;
@@ -40,13 +38,20 @@ begin
 	CONTADOR: process(aux_clk_o,rst_i)
 	begin
 		if (rst_i = '1') then
-			aux_cnt_o <= to_unsigned(0,pwm_resolution);
+			aux_cnt_o <= (others => '0');
 		elsif rising_edge(aux_clk_o) then
-			aux_cnt_o <= aux_cnt_o + to_unsigned(1,pwm_resolution);
+			aux_cnt_o <= aux_cnt_o + 1;
 		end if;
 	end process;
 	
-	pwm_o <= '1' when (to_integer(aux_cnt_o) <= to_integer(duty_cycle_i))
-	else '0';
-	
+	PWM: process(aux_cnt_o, rst_i)
+	begin
+		if (rst_i = '1') then
+			pwm_o <= '0';
+		elsif (aux_cnt_o <= duty_cycle_i) then
+				pwm_o <= '1';
+			else pwm_o <= '0';
+		end if;
+	end process;
+
 end;
