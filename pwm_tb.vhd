@@ -1,7 +1,6 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
-use ieee.math_real.all;
 
 entity pwm_tb is
 end;
@@ -36,8 +35,9 @@ architecture pwm_tb_arq of pwm_tb is
 begin
 	-- Señales de excitacion
 	clk_i_tb <= not clk_i_tb after 10 ns;		
-	rst_i_tb <= '1' after 50 ms, '0' after 100 ms;
-	duty_cycle_i_tb <= to_unsigned(150,pwm_resolution_tb) after 100 ms;
+	rst_i_tb <= '1' after 5 ms, '0' after 10 ms;
+	duty_cycle_i_tb <= to_unsigned(122,pwm_resolution_tb) after 10 ms, to_unsigned(200,pwm_resolution_tb) after 15 ms, to_unsigned(255,pwm_resolution_tb) after 25 ms;
+	freq_divider_i_tb <= to_unsigned(200,freq_resolution_tb) after 20 ms;
 	
 	-- Instanciacion del componente a probar
 	DUT: pwm

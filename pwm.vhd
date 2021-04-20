@@ -4,8 +4,8 @@ use IEEE.numeric_std.all;
 
 entity pwm is
 	generic(
-			pwm_resolution: integer := 8;  -- Resolucion máxima del pwm
-			freq_resolution: integer :=16
+			pwm_resolution: integer := 8;  	-- Resolucion máxima del pwm
+			freq_resolution: integer :=16	-- Resolucion máxima de la frecuencia del pwm
 	);
 	port(
 		clk_i: in std_logic;
@@ -18,13 +18,15 @@ end;
 
 architecture pwm_arq of pwm is
 
+	--Señales auxiliares
 	signal clk_cnt: unsigned(freq_resolution-1 downto 0) := (others => '0');
 	signal aux_clk_o: std_logic := '0';
 	signal aux_cnt_o: unsigned(pwm_resolution-1 downto 0) := (others => '0');
 	
 begin
 	
-	CLK_DIVIDER: process(clk_i,rst_i)
+	--Divisor de clock del sistema
+	CLK_DIVIDER: process(clk_i)
 	begin
 		if rising_edge(clk_i) then
 			clk_cnt <= clk_cnt + 1;
@@ -35,6 +37,7 @@ begin
 		end if;
 	end process;
 
+	--Contador para duty cycle, cuenta 1 pulso por flanco ascendente
 	CONTADOR: process(aux_clk_o,rst_i)
 	begin
 		if (rst_i = '1') then
@@ -44,6 +47,7 @@ begin
 		end if;
 	end process;
 	
+	--Salida del pwm
 	PWM: process(aux_cnt_o, rst_i)
 	begin
 		if (rst_i = '1') then
